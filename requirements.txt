@@ -1,0 +1,7 @@
+pandas
+numpy
+matplotlib
+otter-grader
+scikit-learn
+pandoc
+pypdf
