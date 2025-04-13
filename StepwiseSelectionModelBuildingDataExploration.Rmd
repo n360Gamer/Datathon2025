@@ -1,0 +1,76 @@
+---
+title: "Stepwise Selection Model Building Data Exploration"
+author: "Nathan Barfield"
+date: "2025-04-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data = read.csv("./train-metadata.csv",header = TRUE)
+data = subset(data, select = -c(lesion_id,
+                    iddx_full, 
+                    iddx_1,
+                    iddx_2, 
+                    iddx_3, 
+                    iddx_4, 
+                    iddx_5, 
+                    mel_mitotic_index, 
+                    mel_thick_mm,
+                    anatom_site_general,
+                    isic_id,
+                    patient_id,
+                    image_type,
+                    attribution,
+                    copyright_license))
+data = na.omit(data)
+```
+
+```{r}
+model = glm(formula = factor(target)~1, 
+                  family = binomial(link = "logit"),
+                  data = data)
+full = glm(formula = factor(target) ~ age_approx + sex + clin_size_long_diam_mm + tbp_tile_type +
+tbp_lv_A +
+tbp_lv_Aext +
+tbp_lv_B +
+tbp_lv_Bext +
+tbp_lv_C +
+tbp_lv_Cext +
+tbp_lv_H +
+tbp_lv_Hext +
+tbp_lv_L +
+tbp_lv_Lext +
+tbp_lv_areaMM2 +
+tbp_lv_area_perim_ratio +
+tbp_lv_color_std_mean +
+tbp_lv_deltaA +
+tbp_lv_deltaB +
+tbp_lv_deltaL +
+tbp_lv_deltaLB +
+tbp_lv_deltaLBnorm +
+tbp_lv_eccentricity +
+tbp_lv_location +
+tbp_lv_location_simple +
+tbp_lv_minorAxisMM +
+tbp_lv_nevi_confidence +
+tbp_lv_norm_border +
+tbp_lv_norm_color +
+tbp_lv_perimeterMM +
+tbp_lv_radial_color_std_max +
+tbp_lv_stdL +
+tbp_lv_stdLExt +
+tbp_lv_symm_2axis +
+tbp_lv_symm_2axis_angle +
+tbp_lv_x +
+tbp_lv_y +
+tbp_lv_z +
+tbp_lv_dnn_lesion_confidence,
+                  family = binomial(link = "logit"),
+                  data = data)
+step(model, scope = list(upper = full), direction = "both")
+summary(model)
+```
