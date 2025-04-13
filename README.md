@@ -1,3 +1,6 @@
+## Challenge + Dataset Source
+ISIC 2024 Challenge - Skin Cancer Detection
+
 ## Inspiration
 We currently have some experience in machine learning, statistics, mathematics, and data analysis, and we wanted a project to help us improve these skills. We were interested in working on an interesting and applicable project that generates a real-world impact. This project provided us the opportunity to delve into analyzing image data and image processing, something we always wanted to try out.
 
