@@ -1,1 +1,16 @@
 isic-2024-challenge
+/train-image/
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/.gitignore
+/.idea/Datathon2025.iml
+/.idea/encodings.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/other.xml
+/.idea/vcs.xml
+/sample_submission.csv
+/test-image.hdf5
+/test-metadata.csv
+/train-image.hdf5
+/train-metadata.csv
