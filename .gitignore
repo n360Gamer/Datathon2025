@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 isic-2024-challenge
 /train-image/
 /.idea/inspectionProfiles/profiles_settings.xml
@@ -14,3 +15,6 @@ isic-2024-challenge
 /test-metadata.csv
 /train-image.hdf5
 /train-metadata.csv
+=======
+/isic-2024-challenge/
+>>>>>>> b5f5056 (merge)
