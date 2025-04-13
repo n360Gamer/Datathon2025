@@ -28,7 +28,7 @@ class ConvNeuralNet(nn.Module):
             in_channels=64, out_channels=64, kernel_size=3)
         self.max_pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.fc1 = nn.Linear(1600, 128)
+        self.fc1 = nn.Linear(18496, 128)
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(128, num_classes)
 
@@ -74,7 +74,7 @@ class SkinLesionDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(
             self.img_dir, self.img_labels.iloc[idx, 0] + '.jpg')
-        image = read_image(img_path)
+        image = read_image(img_path).float() / 255.0
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = self.transform(image)
@@ -86,7 +86,7 @@ class SkinLesionDataset(Dataset):
 # Define relevant variables for the ML task
 num_classes = 2
 learning_rate = 0.001
-num_epochs = 20
+num_epochs = 2
 
 # Device will determine whether to run the training on GPU or CPU.
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -106,8 +106,8 @@ train_dataset, test_dataset = torch.utils.data.random_split(
 
 # create batch sizes for train and test dataloaders
 # (loading everything into memory, no minibatches)
-batch_train, batch_test = len(train_dataset), len(test_dataset)
-
+# batch_train, batch_test = len(train_dataset), len(test_dataset)
+batch_train, batch_test = (64,64)
 # create train and test dataloaders
 train_dataloader = DataLoader(
     train_dataset, batch_size=batch_train, shuffle=True)
