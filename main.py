@@ -85,7 +85,7 @@ class SkinLesionDataset(Dataset):
 
 # Define relevant variables for the ML task
 num_classes = 2
-learning_rate = 0.001
+learning_rate = 0.01
 num_epochs = 2
 
 # Device will determine whether to run the training on GPU or CPU.
