@@ -1,103 +1,114 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-
+# Load in relevant libraries, and alias where appropriate
 import torch
-from torch import optim
-from torch import nn
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
-# !pip install torchvision
+import torch.nn as nn
 import torchvision
-
-import torch.nn.functional as F
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-
-# !pip install torchmetrics
-import torchmetrics
-
-class CNN(nn.Module):
-   def __init__(self, in_channels, num_classes):
-
-       """
-       Building blocks of convolutional neural network.
-
-       Parameters:
-           * in_channels: Number of channels in the input image (for grayscale images, 1)
-           * num_classes: Number of classes to predict. In our problem, 10 (i.e digits from  0 to 9).
-       """
-       super(CNN, self).__init__()
-
-       # 1st convolutional layer
-       self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=8, kernel_size=3, padding=1)
-       # Max pooling layer
-       self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-       # 2nd convolutional layer
-       self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, padding=1)
-       # Fully connected layer
-       self.fc1 = nn.Linear(16 * 7 * 7, num_classes)
-
-   def forward(self, x):
-       """
-       Define the forward pass of the neural network.
-
-       Parameters:
-           x: Input tensor.
-
-       Returns:
-           torch.Tensor
-               The output tensor after passing through the network.
-       """
-       x = F.relu(self.conv1(x))  # Apply first convolution and ReLU activation
-       x = self.pool(x)           # Apply max pooling
-       x = F.relu(self.conv2(x))  # Apply second convolution and ReLU activation
-       x = self.pool(x)           # Apply max pooling
-       x = x.reshape(x.shape[0], -1)  # Flatten the tensor
-       x = self.fc1(x)            # Apply fully connected layer
-       return x
-       x = x.reshape(x.shape[0], -1)  # Flatten the tensor
-       x = self.fc1(x)            # Apply fully connected layer
-       return x
+from torch.utils.data import DataLoader
 
 
+# Define relevant variables for the ML task
+num_classes = 2
+learning_rate = 0.001
+num_epochs = 20
 
-def main():
-    batch_size = 60
+# Device will determine whether to run the training on GPU or CPU.
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    train_dataset = datasets.DatasetFolder(root = "train-image/image/",
-                                           transform = transforms.Compose([transforms.Resize((150,150)),transforms.ToTensor()]))
+# Use transforms.compose method to reformat images for modeling,
+# and save to variable all_transforms for later use
+all_transforms = transforms.Compose([transforms.Resize((80,80)),
+                                     transforms.ToTensor()
+                                     ])
+# Create Training dataset
+dp = torchvision.datasets.DatasetFolder(root = './train-image/image/',
+                                             transform = all_transforms)
 
-    train_loader = DataLoader(dataset = train_dataset, batch_size = batch_size, shuffle = True)
+# TODO: Add labels to data before splitting.
 
-    test_dataset = datasets.MNIST(root = "train-image/image/", download = True, train = False,
-                                  transform = transforms.ToTensor())
+train_size, test_size = int(len(dp) * 0.8), len(dp) - (int(len(dp) * 0.8))
+train_dataset, test_dataset = torch.utils.data.random_split(dp, [train_size, test_size])
 
-    test_loader = DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True)
+# create batch sizes for train and test dataloaders
+# (loading everything into memory, no minibatches)
+batch_train, batch_test = len(train_dataset), len(test_dataset)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+# create train and test dataloaders
+train_dataloader = DataLoader(train_dataset, batch_size=batch_train, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_test)
 
-    model = CNN(in_channels = 1, num_classes = 10).to(device)
-    print(model)
 
-    # Define the loss function
-    criterion = nn.CrossEntropyLoss()
+# Creating a CNN class
+class ConvNeuralNet(nn.Module):
+    #  Determine what layers and their order in CNN object
+    def __init__(self, num_classes):
+        super(ConvNeuralNet, self).__init__()
+        self.conv_layer1 = nn.Conv2d(in_channels = 3, out_channels = 32, kernel_size = 3)
+        self.conv_layer2 = nn.Conv2d(in_channels = 32, out_channels = 32, kernel_size = 3)
+        self.max_pool1 = nn.MaxPool2d(kernel_size = 2, stride = 2)
 
-    # Define the optimizer
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+        self.conv_layer3 = nn.Conv2d(in_channels = 32, out_channels = 64, kernel_size = 3)
+        self.conv_layer4 = nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3)
+        self.max_pool2 = nn.MaxPool2d(kernel_size = 2, stride = 2)
 
-    num_epochs=10
-    for epoch in range(num_epochs):
-     # Iterate over training batches
-       print(f"Epoch [{epoch + 1}/{num_epochs}]")
+        self.fc1 = nn.Linear(1600, 128)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(128, num_classes)
 
-       for batch_index, (data, targets) in enumerate(tqdm(dataloader_train)):
-           data = data.to(device)
-           targets = targets.to(device)
-           scores = model(data)
-           loss = criterion(scores, targets)
-           optimizer.zero_grad()
-           loss.backward()
-           optimizer.step()
+    # Progresses data across layers
+    def forward(self, x):
+        out = self.conv_layer1(x)
+        out = self.conv_layer2(out)
+        out = self.max_pool1(out)
+
+        out = self.conv_layer3(out)
+        out = self.conv_layer4(out)
+        out = self.max_pool2(out)
+
+        out = out.reshape(out.size(0), -1)
+
+        out = self.fc1(out)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        return out
+
+model = ConvNeuralNet(num_classes)
+
+# Set Loss function with criterion
+criterion = nn.CrossEntropyLoss()
+
+# Set optimizer with optimizer
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay = 0.005, momentum = 0.9)
+
+total_step = len(train_dataloader)
+
+# We use the pre-defined number of epochs to determine how many iterations to train the network on
+for epoch in range(num_epochs):
+    # Load in the data in batches using the train_loader object
+    for i, (images, labels) in enumerate(train_dataloader):
+        # Move tensors to the configured device
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Forward pass
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch + 1, num_epochs, loss.item()))
+
+with torch.no_grad():
+    correct = 0
+    total = 0
+    for images, labels in train_dataloader:
+        images = images.to(device)
+    labels = labels.to(device)
+    outputs = model(images)
+    _, predicted = torch.max(outputs.data, 1)
+    total += labels.size(0)
+    correct += (predicted == labels).sum().item()
+
+    print('Accuracy of the network on the {} train images: {} %'.format(50000, 100 * correct / total))
